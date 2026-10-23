@@ -1,14 +1,20 @@
 # Assistente Suporte Fluig
 
-Widget Fluig (WAR) com API REST em `/rest`. Nesta versão a tela do widget só indica que a interface é a API; o uso real é por HTTP (em geral a partir de um dataset Fluig).
+Assistente de suporte técnico com **IA (OpenAI)** para processos Fluig. O suporte pergunta em linguagem natural; o modelo de linguagem responde com base no markdown do processo — não em conhecimento genérico treinado na web.
 
-Cada processo publicado tem um markdown em `src/main/resources/knowledge/<processId>.md`. O chamador informa o `processo`; o servidor monta o prompt com esse documento e consulta a OpenAI. A resposta usa **apenas** o que está no markdown.
+Tecnicamente é um widget Fluig (WAR) com API REST em `/rest`. Nesta versão a tela do widget só indica que a interface é a API; o uso real é por HTTP (em geral a partir de um dataset Fluig).
 
 Este repositório traz um processo fictício (`exemplo`) para demonstração. Quem publica o widget escreve o conhecimento dos próprios processos; regras de negócio de clientes **não** ficam versionadas aqui.
 
+## Como a IA funciona
+
+1. **Contexto** — Cada processo publicado é um markdown em `src/main/resources/knowledge/<processId>.md`. O chamador informa o `processo`; só esse documento entra no prompt.
+2. **Geração** — O WAR monta o prompt (instruções de sistema + documentação do processo + histórico + pergunta) e chama a API OpenAI. O modelo padrão é `gpt-4o-mini` (configurável em `app.properties`).
+3. **Limite e rastreio** — A instrução de sistema pede resposta **apenas** com o que está no documento. A API devolve o hash SHA-256 do markdown (`contexto`) e, se existir, a data de `Ultima analise:` (`ultimaAnalise`).
+
 ## Objetivo
 
-Permitir que suporte técnico pergunte sobre um processo Fluig e receba uma resposta rastreável:
+Permitir que suporte técnico pergunte sobre um processo Fluig e receba uma **resposta gerada por IA**, rastreável até o documento usado:
 
 - hash SHA-256 do markdown carregado (`contexto`);
 - data da linha `Ultima analise:` do documento, quando existir (`ultimaAnalise`).
@@ -19,7 +25,7 @@ Permitir que suporte técnico pergunte sobre um processo Fluig e receba uma resp
 |-------|------------------|
 | Dataset / portal Fluig | Autentica o usuário (ex.: papel `admin`) e chama o WAR |
 | Este WAR | Valida o header `X-Internal-Token`, monta o prompt e chama a OpenAI |
-| OpenAI | Gera a resposta com base no prompt |
+| OpenAI (modelo de linguagem) | Gera a resposta com base no prompt |
 
 O script de referência está em [datasets/ds_assistente_suporte_fluig.js](datasets/ds_assistente_suporte_fluig.js). Quem implanta publica o dataset no Fluig e configura o `INTERNAL_TOKEN` localmente.
 
@@ -27,7 +33,7 @@ O script de referência está em [datasets/ds_assistente_suporte_fluig.js](datas
 
 1. O cliente (dataset ou HTTP) faz `POST /rest/chat` com `X-Internal-Token`.
 2. O catálogo carrega `knowledge/<processo>.md` do classpath.
-3. O prompt vai para `https://api.openai.com`.
+3. O prompt é enviado ao modelo de linguagem (OpenAI) em `https://api.openai.com`.
 4. A resposta JSON traz `status`, `processo`, `contexto`, `resposta` e, se houver, `ultimaAnalise`.
 
 ## Pré-requisitos
