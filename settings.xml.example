@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Copie os blocos <profile> abaixo para o seu ~/.m2/settings.xml (fora do repositorio).
+	O id do profile precisa ser igual ao do pom.xml (homolog / prod).
+
+	api.internalToken: segredo compartilhado com o dataset ds_assistente_suporte_fluig
+	(header X-Internal-Token). Gere um valor aleatorio longo (ex.: uuid + uuid).
+-->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+	<profiles>
+		<profile>
+			<id>homolog</id>
+			<properties>
+				<openai.apiKey>sk-...</openai.apiKey>
+				<api.internalToken>TROQUE_POR_TOKEN_LONGO_ALEATORIO_HOMOLOG</api.internalToken>
+			</properties>
+		</profile>
+		<profile>
+			<id>prod</id>
+			<properties>
+				<openai.apiKey>sk-...</openai.apiKey>
+				<api.internalToken>TROQUE_POR_TOKEN_LONGO_ALEATORIO_PROD</api.internalToken>
+			</properties>
+		</profile>
+	</profiles>
+</settings>

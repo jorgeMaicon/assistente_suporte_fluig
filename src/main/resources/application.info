@@ -1,0 +1,14 @@
+application.type=widget
+application.code=${app.code}
+application.title=${app.title}
+application.description=${project.description}
+application.category=SYSTEM
+application.renderer=freemarker
+developer.code=${app.developer.code}
+developer.name=${app.developer.name}
+developer.url=${app.developer.url}
+application.uiwidget=true
+application.version=${project.version}
+view.file=view.ftl
+edit.file=edit.ftl
+locale.file.base.name=i18n

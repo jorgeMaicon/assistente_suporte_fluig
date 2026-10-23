@@ -1,0 +1,13 @@
+/target/
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.DS_Store
+*.war
+
+# Processo real e overlay local: o clone publico usa so exemplo.md
+src/main/resources/knowledge.local.properties
+src/main/resources/knowledge/*
+!src/main/resources/knowledge/exemplo.md

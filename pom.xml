@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.jorgebrigliadori</groupId>
+	<artifactId>assistente_suporte_fluig</artifactId>
+	<version>1.0.0</version>
+	<packaging>war</packaging>
+
+	<name>Assistente Suporte Fluig</name>
+	<description>Backend de chat de suporte com contexto markdown por processo Fluig</description>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.release>11</maven.compiler.release>
+
+		<app.code>${project.artifactId}</app.code>
+		<app.title>${project.name}</app.title>
+		<app.contextRoot>/${project.artifactId}</app.contextRoot>
+		<app.developer.code>jorge.brigliadori</app.developer.code>
+		<app.developer.name>Jorge Brigliadori</app.developer.name>
+		<app.developer.url>https://www.linkedin.com/in/jorge-maicon/</app.developer.url>
+
+		<junit.version>5.10.2</junit.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>javax</groupId>
+			<artifactId>javaee-api</artifactId>
+			<version>8.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<profiles>
+		<!--
+			openai.apiKey e api.internalToken NAO ficam aqui.
+			Vem de um profile com o mesmo id no ~/.m2/settings.xml (veja settings.xml.example)
+			ou de -Dopenai.apiKey=... -Dapi.internalToken=... na linha de comando.
+		-->
+		<profile>
+			<id>homolog</id>
+			<properties>
+				<app.environment>homolog</app.environment>
+			</properties>
+		</profile>
+		<profile>
+			<id>prod</id>
+			<properties>
+				<app.environment>prod</app.environment>
+			</properties>
+		</profile>
+	</profiles>
+
+	<build>
+		<finalName>${project.artifactId}</finalName>
+
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>false</filtering>
+				<excludes>
+					<exclude>application.info</exclude>
+				</excludes>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>application.info</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>src/main/resources-filtered</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.13.0</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.3.1</version>
+				<configuration>
+					<propertiesEncoding>UTF-8</propertiesEncoding>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.2.5</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>3.4.1</version>
+				<executions>
+					<execution>
+						<id>exigir-credenciais-no-empacotamento</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireProperty>
+									<property>app.environment</property>
+									<message>Informe o ambiente: mvn -Phomolog package ou mvn -Pprod package</message>
+								</requireProperty>
+								<requireProperty>
+									<property>openai.apiKey</property>
+									<message>openai.apiKey nao definido (settings.xml ou -Dopenai.apiKey)</message>
+								</requireProperty>
+								<requireProperty>
+									<property>api.internalToken</property>
+									<regex>.{16,}</regex>
+									<message>api.internalToken nao definido ou com menos de 16 caracteres</message>
+								</requireProperty>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>3.4.0</version>
+				<configuration>
+					<webResources>
+						<resource>
+							<directory>src/main/webapp-filtered</directory>
+							<filtering>true</filtering>
+						</resource>
+					</webResources>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
