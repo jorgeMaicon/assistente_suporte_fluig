@@ -21,7 +21,7 @@ Permitir que suporte técnico pergunte sobre um processo Fluig e receba uma resp
 | Este WAR | Valida o header `X-Internal-Token`, monta o prompt e chama a OpenAI |
 | OpenAI | Gera a resposta com base no prompt |
 
-O script do dataset e a política de quem pode chamar o assistente ficam no ambiente de quem implanta, não neste repositório.
+O script de referência está em [datasets/ds_assistente_suporte_fluig.js](datasets/ds_assistente_suporte_fluig.js). Quem implanta publica o dataset no Fluig e configura o `INTERNAL_TOKEN` localmente.
 
 ## Fluxo
 
@@ -82,27 +82,28 @@ Artefato: `target/assistente_suporte_fluig.war`. Não versionar `target/` nem o 
 1. Painel de Controle → Widgets / Aplicações → publicar o WAR.
 2. Context root: `/assistente_suporte_fluig`.
 
-## Serviço REST no Fluig
+## Serviço REST e dataset no Fluig
 
-Cadastre um serviço REST com código **`ASSISTENTE_SUPORTE_FLUIG`** apontando para a base do widget, por exemplo:
+1. Cadastre um serviço REST com código **`ASSISTENTE_SUPORTE_FLUIG`** apontando para a base do widget, por exemplo:
 
-`https://<servidor>/assistente_suporte_fluig`
+   `https://<servidor>/assistente_suporte_fluig`
 
-O dataset chama `POST /rest/chat` nesse serviço, enviando:
+2. Publique o script [datasets/ds_assistente_suporte_fluig.js](datasets/ds_assistente_suporte_fluig.js) como dataset no Fluig (código `ds_assistente_suporte_fluig`).
+3. No script, troque `INTERNAL_TOKEN` pelo **mesmo** `api.internalToken` do build do WAR (não use a chave OpenAI).
 
-- header `X-Internal-Token` (obrigatório);
-- header `X-User-Code` (opcional; usado no rate limit por usuário).
+O dataset autentica o usuário no papel `admin` (`fdn_userrole`), chama `POST /rest/chat` no serviço e devolve as colunas `RESPOSTA`, `PROCESSO`, `CONTEXTO` e `ERRO`.
 
-### Contrato do dataset
-
-Constraints típicas (nomes a definir no seu script):
+### Constraints
 
 | Constraint | Uso |
 |------------|-----|
 | `PROCESSO` | Id do markdown (`exemplo`, ou o seu processId) |
 | `PERGUNTA` | Texto da pergunta |
+| `HISTORICO` | Opcional: JSON array `[{role, content}, ...]` |
 
-Exemplo genérico no console do Fluig (usuário já autenticado conforme a política do seu dataset):
+### Teste no console
+
+Usuário no papel `admin`:
 
 ```javascript
 var c1 = DatasetFactory.createConstraint("PROCESSO", "exemplo", "exemplo", ConstraintType.MUST);
@@ -110,8 +111,6 @@ var c2 = DatasetFactory.createConstraint("PERGUNTA", "Qual atividade analisa a s
 var ds = DatasetFactory.getDataset("ds_assistente_suporte_fluig", null, [c1, c2], null);
 console.log(ds.values);
 ```
-
-O nome do dataset e o script são de quem implanta. Este repositório não inclui o dataset.
 
 ## API
 
@@ -183,7 +182,7 @@ GET https://<servidor>/assistente_suporte_fluig/rest/health?probeOpenAi=true
 
 ## O que não commitar
 
-- Chave OpenAI e `api.internalToken` (ficam em `~/.m2/settings.xml`)
+- Chave OpenAI e `api.internalToken` (ficam em `~/.m2/settings.xml` e no `INTERNAL_TOKEN` do dataset **no Fluig**, não no Git)
 - `src/main/resources/knowledge.local.properties`
 - Markdown de processo real (`knowledge/*` exceto `exemplo.md`)
 - `target/` e arquivos `*.war`
@@ -191,6 +190,8 @@ GET https://<servidor>/assistente_suporte_fluig/rest/health?probeOpenAi=true
 ## Estrutura
 
 ```
+datasets/
+  ds_assistente_suporte_fluig.js   # dataset Fluig que chama o WAR
 src/main/java/widget/
   ApplicationConfig.java
   Services.java
