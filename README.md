@@ -79,7 +79,7 @@ Artefato: `target/assistente_suporte_fluig.war`. Não versionar `target/` nem o 
 
 ## Publicar no Fluig
 
-1. Painel de Controle → Widgets / Aplicações → publicar o WAR.
+1. Painel de Controle → Aplicativos → Central de Componentes → publicar o WAR.
 2. Context root: `/assistente_suporte_fluig`.
 
 ## Serviço REST e dataset no Fluig
